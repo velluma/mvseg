@@ -1,0 +1,29 @@
+# @package _global_
+# Residual UNet with DiceFocal loss — better for the thin, imbalanced
+# leaflet/annulus classes.
+# Run:  python -m mvseg.train experiment=resunet_focal
+defaults:
+  - override /data: mvseg
+  - override /model: residual_unet
+  - override /trainer: default
+
+task_name: resunet_focal
+
+data:
+  batch_size: 2
+  patch_based: true            # sample foreground-centered patches to fight imbalance
+  num_samples: 2
+
+model:
+  loss:
+    name: dice_focal
+    include_background: false
+  optimizer:
+    lr: 1e-3
+    name: adamw
+
+trainer:
+  max_epochs: 500
+
+logger:
+  tags: [resunet, dice_focal, patch]

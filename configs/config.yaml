@@ -1,0 +1,38 @@
+# Top-level Hydra config. Compose with:  python -m mvseg.train experiment=resunet_baseline
+defaults:
+  - data: mvseg
+  - model: residual_unet
+  - trainer: default
+  - logger: wandb
+  - _self_
+
+# Global reproducibility
+seed: 42
+deterministic: true          # torch.use_deterministic_algorithms + cudnn.deterministic
+task_name: mvseg
+
+# Class semantics (index 0 == background). Order matters — used for per-class metrics.
+class_names:
+  - background
+  - anterior_leaflet
+  - posterior_leaflet
+  - mitral_valve_annulus
+  - aortic_valve_annulus
+num_classes: 5               # includes background
+
+# Where checkpoints / predictions are written (Hydra also creates a run dir under outputs/)
+paths:
+  output_dir: ${hydra:runtime.output_dir}
+  ckpt_dir: ${paths.output_dir}/checkpoints
+
+# Populated by evaluate.py / predict.py; null during training
+ckpt_path: null
+
+hydra:
+  run:
+    dir: outputs/${task_name}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: multirun/${task_name}/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}
+  job:
+    chdir: false

@@ -1,0 +1,4 @@
+# Disable external logging (uses Lightning's CSVLogger). Handy for local dev / CI.
+_target_: lightning.pytorch.loggers.CSVLogger
+save_dir: ${paths.output_dir}
+name: csv

@@ -1,0 +1,10 @@
+# Weights & Biases logger. Set WANDB_API_KEY / WANDB_PROJECT env vars, or override here.
+_target_: lightning.pytorch.loggers.WandbLogger
+project: mvseg
+entity: null                # your wandb team/user; null => default
+name: null                  # run name; null => wandb auto-name
+tags: []
+group: null
+job_type: train
+save_dir: ${paths.output_dir}
+log_model: false            # set true to upload checkpoints as wandb artifacts

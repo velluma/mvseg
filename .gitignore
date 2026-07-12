@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version.local
+
+# uv
+# (uv.lock IS committed for reproducibility; do not ignore it)
+
+# Data (local dataset — see data/README.md; switch to DVC later)
+data/raw/
+data/processed/
+data/splits/*.json
+!data/splits/.gitkeep
+nnunet_data/
+nnUNet_raw/
+nnUNet_preprocessed/
+nnUNet_results/
+
+# Experiment outputs
+outputs/
+multirun/
+wandb/
+lightning_logs/
+checkpoints/
+*.ckpt
+*.pt
+*.pth
+
+# Notebooks
+.ipynb_checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml

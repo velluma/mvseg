@@ -1,0 +1,34 @@
+# Data / LightningDataModule configuration
+_target_: mvseg.data.datamodule.MVSegDataModule
+
+data_dir: data/raw            # contains *_volume.nrrd and *_gt.nrrd (paired by stem)
+splits_file: data/splits/splits.json
+subdir: ""                    # optional sub-folder under data_dir
+image_suffix: _volume         # <stem>_volume.nrrd  (intensity)
+label_suffix: _gt             # <stem>_gt.nrrd      (labels)
+file_ext: .nrrd
+
+# Batching
+batch_size: 2
+val_batch_size: 1
+num_workers: 4
+pin_memory: true
+
+# Spatial handling. Volumes are 128^3 already; keep whole-volume by default.
+spatial_size: [128, 128, 128]
+patch_based: false            # if true, RandCropByPosNegLabeld with num_samples patches
+num_samples: 2                # patches per volume when patch_based=true
+
+# Intensity normalization: "znorm" (z-score) or "minmax"
+normalize: znorm
+
+# MONAI CacheDataset fraction (0.0 disables caching). Raise if RAM allows.
+cache_rate: 0.0
+
+# Augmentation toggles (train only)
+augment: true
+
+# Synthetic mode for smoke tests / CI — generates random volumes, no files read.
+synthetic: false
+synthetic_num_train: 4
+synthetic_num_val: 2

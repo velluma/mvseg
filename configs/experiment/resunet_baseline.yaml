@@ -1,0 +1,26 @@
+# @package _global_
+# Baseline 3D Residual UNet with DiceCE loss.
+# Run:  python -m mvseg.train experiment=resunet_baseline
+defaults:
+  - override /data: mvseg
+  - override /model: residual_unet
+  - override /trainer: default
+
+task_name: resunet_baseline
+
+data:
+  batch_size: 2
+  normalize: znorm
+  augment: true
+
+model:
+  loss:
+    name: dice_ce
+  optimizer:
+    lr: 1e-3
+
+trainer:
+  max_epochs: 300
+
+logger:
+  tags: [resunet, dice_ce, baseline]

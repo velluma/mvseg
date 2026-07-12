@@ -1,0 +1,77 @@
+[project]
+name = "mvseg"
+version = "0.1.0"
+description = "3D TEE cardiac ultrasound mitral valve segmentation (MONAI + PyTorch Lightning + wandb, plus nnU-Netv2)"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "MVSeg Team" }]
+
+dependencies = [
+    "torch>=2.2",
+    "monai>=1.3",
+    "lightning>=2.2",
+    "wandb>=0.16",
+    "hydra-core>=1.3",
+    "omegaconf>=2.3",
+    # medical image IO
+    "itk>=5.3",
+    "nibabel>=5.0",
+    "SimpleITK>=2.3",
+    "pynrrd>=1.0",
+    "numpy>=1.24",
+    "scikit-image>=0.22",
+    "scipy>=1.11",
+    "pandas>=2.0",
+    "tqdm>=4.66",
+    "matplotlib>=3.8",
+    # nnU-Net v2 experiment track
+    "nnunetv2>=2.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.6",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pre-commit>=3.7",
+]
+
+[project.scripts]
+mvseg-train = "mvseg.train:main"
+mvseg-eval = "mvseg.evaluate:main"
+mvseg-predict = "mvseg.predict:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mvseg"]
+
+[tool.uv]
+# Torch/MONAI GPU wheels: override the index for CUDA builds if needed, e.g.
+#   uv sync --extra dev
+# For a specific CUDA build, see README (torch index-url override).
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests", "scripts", "nnunet"]
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W", "C4", "SIM"]
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.ruff.lint.isort]
+known-first-party = ["mvseg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+pythonpath = ["src"]
+markers = [
+    "gpu: tests that require a GPU (deselect with -m 'not gpu')",
+    "slow: slow tests",
+]

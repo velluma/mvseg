@@ -1,0 +1,31 @@
+# GPU development container.
+# Usage:  docker compose run --rm mvseg bash
+# Requires the NVIDIA Container Toolkit on the host.
+services:
+  mvseg:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mvseg:latest
+    working_dir: /workspace
+    environment:
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - WANDB_PROJECT=${WANDB_PROJECT:-mvseg}
+      - nnUNet_raw=/workspace/nnUNet_raw
+      - nnUNet_preprocessed=/workspace/nnUNet_preprocessed
+      - nnUNet_results=/workspace/nnUNet_results
+      - PYTHONPATH=/workspace/src
+    volumes:
+      - .:/workspace
+      # Mount your local dataset (read-only) — adjust the host path.
+      - ${MVSEG_DATA_DIR:-./data}:/workspace/data
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    stdin_open: true
+    tty: true

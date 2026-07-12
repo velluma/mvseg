@@ -1,0 +1,14 @@
+# Normalize line endings for reproducibility across OSes.
+* text=auto eol=lf
+
+# Shell scripts must stay LF (they run in Linux/Docker).
+*.sh text eol=lf
+
+# Binary / data assets — never touch.
+*.nrrd binary
+*.nii binary
+*.nii.gz binary
+*.ckpt binary
+*.pt binary
+*.pth binary
+*.png binary

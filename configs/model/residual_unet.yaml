@@ -1,0 +1,39 @@
+# 3D Residual UNet (MONAI) + LightningModule hyperparameters.
+_target_: mvseg.models.lit_module.MVSegLitModule
+
+# --- network (monai.networks.nets.UNet with num_res_units>0 == Residual UNet) ---
+net:
+  _target_: mvseg.models.residual_unet.build_residual_unet
+  spatial_dims: 3
+  in_channels: 1
+  out_channels: ${num_classes}
+  channels: [16, 32, 64, 128, 256]
+  strides: [2, 2, 2, 2]
+  num_res_units: 2
+  norm: INSTANCE
+  dropout: 0.0
+
+# --- loss ---
+loss:
+  name: dice_ce            # dice_ce | dice_focal
+  include_background: false
+  lambda_dice: 1.0
+  lambda_ce: 1.0
+
+# --- optimization ---
+optimizer:
+  name: adamw             # adamw | sgd
+  lr: 1e-3
+  weight_decay: 1e-5
+scheduler:
+  name: cosine            # cosine | polynomial | none
+  warmup_epochs: 0
+
+# --- inference ---
+sliding_window: false     # 128^3 fits whole; enable for larger inputs
+sw_roi_size: ${data.spatial_size}
+sw_batch_size: 4
+sw_overlap: 0.5
+
+# how often (in epochs) to log prediction overlays to wandb
+viz_every_n_epochs: 10
