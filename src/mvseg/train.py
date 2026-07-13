@@ -51,6 +51,27 @@ def build_callbacks(cfg: DictConfig) -> list[pl.Callback]:
     return callbacks
 
 
+# Keys that only the WandbLogger understands. Experiments set these globally
+# (e.g. logger.tags), so strip them when a different logger (CSV/none) is active,
+# otherwise Lightning's CSVLogger.__init__ rejects the unexpected kwargs.
+_WANDB_ONLY_KEYS = ("tags", "group", "job_type", "entity", "log_model")
+
+
+def build_logger(cfg: DictConfig):
+    if not cfg.get("logger"):
+        return None
+    logger_cfg = cfg.logger
+    target = logger_cfg.get("_target_", "")
+    if not target.endswith("WandbLogger"):
+        # Resolve while still attached to the root cfg so ${paths.*} interpolations
+        # (e.g. save_dir) survive before we detach into a standalone config.
+        resolved = OmegaConf.to_container(logger_cfg, resolve=True)
+        for key in _WANDB_ONLY_KEYS:
+            resolved.pop(key, None)
+        logger_cfg = OmegaConf.create(resolved)
+    return instantiate(logger_cfg)
+
+
 def build_trainer(cfg: DictConfig, logger, callbacks) -> pl.Trainer:
     t = cfg.trainer
     return pl.Trainer(
@@ -81,7 +102,7 @@ def main(cfg: DictConfig) -> float:
 
     datamodule = instantiate(cfg.data)
     model = instantiate(cfg.model, num_classes=cfg.num_classes)
-    logger = instantiate(cfg.logger) if cfg.get("logger") else None
+    logger = build_logger(cfg)
     callbacks = build_callbacks(cfg)
 
     trainer = build_trainer(cfg, logger, callbacks)

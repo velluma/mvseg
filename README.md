@@ -40,13 +40,19 @@ uv run python -c "import monai, lightning, wandb, hydra; print('ok')"
 
 ### GPU / CUDA wheels
 
-The default lock resolves CPU-compatible wheels for portability. For a specific
-CUDA build, set the torch backend before syncing:
+`torch` is **pinned to a CUDA 11.8 build** (`torch==2.4.1+cu118`, via
+`[tool.uv.sources]` in `pyproject.toml`) so it runs on **Tesla P100** and other
+Pascal (sm_60) GPUs. Newer torch/CUDA wheels drop Pascal kernels and would fail
+with `no kernel image is available for execution on the device`. The cu118 build
+only needs driver `>= 450`, so it also works on older servers. Check yours:
 
 ```bash
-UV_TORCH_BACKEND=cu121 uv sync --extra dev     # CUDA 12.1
-# or pin an index in pyproject.toml [tool.uv.sources]
+nvidia-smi        # "Driver Version" must be >= 450 (cu118) / >= 525 (cu121)
 ```
+
+To target a newer GPU with CUDA 12.1 instead, edit the `pytorch-cu118` index URL
+in `pyproject.toml` to `.../whl/cu121`, bump the `torch` pin, change the Dockerfile
+base image to `nvidia/cuda:12.1.1-...`, and re-run `uv lock`.
 
 ### Docker (recommended for training)
 

@@ -8,7 +8,9 @@ license = { text = "Proprietary" }
 authors = [{ name = "MVSeg Team" }]
 
 dependencies = [
-    "torch>=2.2",
+    # Pinned for Tesla P100 (Pascal, sm_60): cu118 wheels still ship sm_60
+    # kernels and only need driver >= 450. See [tool.uv.sources] below.
+    "torch==2.4.1",
     "monai>=1.3",
     "lightning>=2.2",
     "wandb>=0.16",
@@ -50,9 +52,18 @@ build-backend = "hatchling.build"
 packages = ["src/mvseg"]
 
 [tool.uv]
-# Torch/MONAI GPU wheels: override the index for CUDA builds if needed, e.g.
-#   uv sync --extra dev
-# For a specific CUDA build, see README (torch index-url override).
+# Torch is pinned to a CUDA 11.8 build so it runs on Tesla P100 (Pascal / sm_60).
+# The cu118 wheels include sm_60 kernels and work with driver >= 450, which older
+# P100 servers usually have. If your server has a newer driver (>= 525) and you
+# want CUDA 12.1, switch both lines below to ".../whl/cu121" and re-run `uv lock`.
+
+[[tool.uv.index]]
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true          # only used by packages that opt in via [tool.uv.sources]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu118" }
 
 [tool.ruff]
 line-length = 100

@@ -1,6 +1,8 @@
-# CUDA 12.1 runtime with cuDNN — matches torch cu121 wheels.
-# For a different CUDA version, change the base image and the torch index in README.
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+# CUDA 11.8 runtime with cuDNN — matches the cu118 torch wheels pinned in
+# pyproject.toml and runs on Tesla P100 (Pascal / sm_60) with driver >= 450.
+# For a newer GPU/driver, bump this to nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+# and switch the torch index to cu121 in pyproject.toml.
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
