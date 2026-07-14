@@ -279,6 +279,7 @@ class DatasetAnalysis:
 class SplitAnalysis:
     per_split: dict[str, DatasetAnalysis]
     rare_warnings: list[str]
+    leakage: list[str] = field(default_factory=list)
 
 
 def analyze_splits(
@@ -290,6 +291,16 @@ def analyze_splits(
         cases = [by_case[c] for c in ids if c in by_case]
         per_split[name] = DatasetAnalysis(cases, num_classes=num_classes)
 
+    # Patient-level leakage: no patient may appear in more than one split. This is
+    # the single most important integrity check — if it fails, every downstream
+    # metric is inflated (a patient's correlated frames straddle train and test).
+    leakage: list[str] = []
+    pat = {name: per_split[name].patients for name in ("train", "val", "test")}
+    for a, b in (("train", "val"), ("train", "test"), ("val", "test")):
+        shared = sorted(pat[a] & pat[b])
+        if shared:
+            leakage.append(f"{a}∩{b}: {shared}")
+
     warnings: list[str] = []
     for name in ("val", "test"):
         freq = per_split[name].image_frequency()
@@ -300,7 +311,7 @@ def analyze_splits(
                     f"class '{CLASS_NAMES[c]}' appears in only {n_present} {name} case(s) "
                     f"(< {min_test_cases}) — its {name} score is statistically unreliable"
                 )
-    return SplitAnalysis(per_split=per_split, rare_warnings=warnings)
+    return SplitAnalysis(per_split=per_split, rare_warnings=warnings, leakage=leakage)
 
 
 # --------------------------------------------------------------------------- #
@@ -375,6 +386,16 @@ def build_findings(
                 "finding": f"{len(issues)} automated quality issue(s): {dict(kinds)}.",
                 "impact": "Shape mismatches / out-of-range labels / empty masks corrupt training and metrics.",
                 "action": "Fix or exclude the listed cases before the next data version; see the issue table below.",
+            }
+        )
+
+    if split_analysis and split_analysis.leakage:
+        findings.append(
+            {
+                "severity": "high",
+                "finding": "PATIENT LEAKAGE across splits — " + "; ".join(split_analysis.leakage),
+                "impact": "A patient's correlated frames straddle train and test; every reported metric is inflated and invalid.",
+                "action": "Regenerate splits with `scripts/prepare_splits.py` (patient-level) before any training. Do not trust prior results.",
             }
         )
 
@@ -507,6 +528,15 @@ def write_report(
             dist = da.voxel_distribution()
             fracs = " | ".join(f"{dist.get(c, (0, 0.0))[1]:.2%}" for c in range(1, analysis.num_classes))
             lines.append(f"| {name} | {len(da.patients)} | {da.n_cases} | {fracs} |")
+        if split_analysis.leakage:
+            lines.append("")
+            lines.append(
+                "- ❌ **PATIENT LEAKAGE**: " + "; ".join(split_analysis.leakage)
+                + " — regenerate splits before training."
+            )
+        else:
+            lines.append("")
+            lines.append("- ✅ No patient appears in more than one split (patient-level integrity verified).")
         lines += [
             "",
             "> Splitting is patient-level (see `mvseg.data.splits`), preventing a patient's",

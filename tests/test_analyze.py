@@ -118,3 +118,17 @@ def test_split_analysis_flags_rare_class(tmp_path):
     # only 1 test case -> every present class is under the 5-case threshold
     assert any("statistically unreliable" in w for w in sa.rare_warnings)
     assert sa.per_split["train"].n_cases == 2
+    assert sa.leakage == []  # distinct patients -> no leak
+
+
+def test_split_analysis_detects_patient_leakage():
+    # Two cases of the SAME patient split across train and test.
+    a = case_stats_from_arrays("P001_IMG0_00", _gt_with({1: [(1, 1, 1)]}))
+    b = case_stats_from_arrays("P001_IMG1_00", _gt_with({1: [(2, 2, 2)]}))
+    by_case = {c.case_id: c for c in (a, b)}
+    splits = Splits(train=["P001_IMG0_00"], val=[], test=["P001_IMG1_00"])
+    sa = analyze_splits(by_case, splits, num_classes=5)
+    assert sa.leakage and "P001" in sa.leakage[0]
+
+    findings = build_findings(DatasetAnalysis([a, b], num_classes=5), sa)
+    assert any("LEAKAGE" in f["finding"] and f["severity"] == "high" for f in findings)
