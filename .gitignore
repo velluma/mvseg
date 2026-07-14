@@ -22,6 +22,11 @@ nnUNet_raw/
 nnUNet_preprocessed/
 nnUNet_results/
 
+# Analysis reports (contain patient-derived stats + real-image overlays — do NOT
+# commit; regenerate with `python -m mvseg.data.analyze`. Copy DATA_CARD.md into
+# the data-version folder by hand if you want to version it.)
+reports/
+
 # Experiment outputs
 outputs/
 multirun/

@@ -86,8 +86,27 @@ Each labeled frame is one `_volume`/`_gt` pair sharing a stem. Splitting is
 
 ```bash
 uv run python scripts/prepare_splits.py --data-dir data/raw --out data/splits/splits.json
-uv run python scripts/inspect_data.py   --data-dir data/raw   # sanity report
+uv run python scripts/inspect_data.py   --data-dir data/raw   # quick sanity report
 ```
+
+### Full dataset analysis
+
+For a versioned data review — pixel- **and** image-level class distribution,
+object-size distribution, co-occurrence, automated quality checks (out-of-range
+labels, shape mismatch, empty masks, tiny fragments), split leakage/coverage,
+and a trivial baseline — run the analyzer. It writes an issue-driven report, a
+`DATA_CARD.md`, distribution plots, and mid-slice GT overlays:
+
+```bash
+uv run python -m mvseg.data.analyze \
+    --data-dir data/raw --splits-file data/splits/splits.json \
+    --out-dir reports/data_analysis --version v1_$(date +%Y%m%d)
+```
+
+Output lands in `reports/` (git-ignored — overlays contain real imagery). Re-run
+it whenever the dataset changes and copy `DATA_CARD.md` next to that version's
+`splits.json` if you want to commit the card. See `docs/experiments/` for how
+findings feed loss/sampling/crop decisions.
 
 ---
 
