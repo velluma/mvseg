@@ -28,6 +28,7 @@ class MVSegLitModule(LightningModule):
         optimizer: dict | None = None,
         scheduler: dict | None = None,
         num_classes: int = 5,
+        topo_classes: list[int] | None = None,
         sliding_window: bool = False,
         sw_roi_size: tuple[int, int, int] = (128, 128, 128),
         sw_batch_size: int = 4,
@@ -43,8 +44,12 @@ class MVSegLitModule(LightningModule):
         self.criterion = build_loss(**loss)
         self.num_classes = num_classes
 
-        self.val_metrics = SegMetrics(num_classes=num_classes, compute_hd95=True)
-        self.test_metrics = SegMetrics(num_classes=num_classes, compute_hd95=True)
+        self.val_metrics = SegMetrics(
+            num_classes=num_classes, compute_hd95=True, topo_classes=topo_classes
+        )
+        self.test_metrics = SegMetrics(
+            num_classes=num_classes, compute_hd95=True, topo_classes=topo_classes
+        )
         self._val_viz_logged = False
 
     # ------------------------------------------------------------------ forward

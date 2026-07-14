@@ -14,11 +14,22 @@ net:
   dropout: 0.0
 
 # --- loss ---
+# name: dice_ce | dice_focal | dice_ce_cldice | dice_focal_cldice
+# The "_cldice" variants add a topology-preserving centerline-Dice term on the
+# classes in `cldice_classes` (see configs/experiment/resunet_cldice.yaml).
 loss:
-  name: dice_ce            # dice_ce | dice_focal
+  name: dice_ce
   include_background: false
   lambda_dice: 1.0
   lambda_ce: 1.0
+  # clDice term (only used by the "_cldice" variants):
+  # cldice_classes: [4]    # aortic-valve annulus (thin ring)
+  # lambda_cldice: 0.5     # weight relative to the base loss
+  # cldice_iters: 10       # soft-skeletonization steps (>= thickest half-radius)
+
+# Classes to compute topology metrics for at val/test (betti0 error, clDice
+# score, connected-component rate). null disables. Enable to measure ring breaks.
+topo_classes: null
 
 # --- optimization ---
 optimizer:

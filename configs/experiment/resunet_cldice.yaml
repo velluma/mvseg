@@ -1,0 +1,39 @@
+# @package _global_
+# Residual UNet with a topology-preserving clDice term on the aortic-valve
+# annulus (label 4), a thin ring that tends to break under a pure overlap loss.
+#
+# Ablation vs. the baseline (identical everything except the loss):
+#   python -m mvseg.train +experiment=resunet_baseline model.topo_classes=[4]   # control
+#   python -m mvseg.train +experiment=resunet_cldice                            # treatment
+#
+# See docs/experiments/cldice_aortic.md for the full protocol.
+defaults:
+  - override /data: mvseg
+  - override /model: residual_unet
+  - override /trainer: default
+
+task_name: resunet_cldice
+
+data:
+  batch_size: 2
+  normalize: znorm
+  augment: true
+
+model:
+  loss:
+    name: dice_ce_cldice
+    include_background: false
+    lambda_dice: 1.0
+    lambda_ce: 1.0
+    cldice_classes: [4]     # aortic-valve annulus
+    lambda_cldice: 0.5      # weight of the topology term
+    cldice_iters: 10        # soft-skeletonization steps
+  topo_classes: [4]         # report betti0 / clDice / connected-rate for AV annulus
+  optimizer:
+    lr: 1e-3
+
+trainer:
+  max_epochs: 300
+
+logger:
+  tags: [resunet, dice_ce, cldice, aortic_annulus]
